@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "None",
+    "newLine": "lf",
+    "outDir": "build",
+    "removeComments": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2020"
+  },
+  "include": ["src/*.ts"],
+  "typeAcquisition": {
+    "enable": false
+  }
+}

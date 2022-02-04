@@ -1,0 +1,7 @@
+.vscode/
+build/
+dist/
+node_modules/
+temp/
+
+*.code-*
