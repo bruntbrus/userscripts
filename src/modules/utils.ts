@@ -1,7 +1,7 @@
 import { GM } from './gm'
 import type { GMInfo, GMResponse, GMResponseType, GMValue } from './gm'
 
-export interface UtilsRequestOptions {
+export interface RequestOptions {
   binary?: boolean
   data?: string
   headers?: Record<string, string>
@@ -12,7 +12,7 @@ export interface UtilsRequestOptions {
   user?: string
 }
 
-export interface UtilsResponse {
+export interface CustomResponse {
   headers: string
   readyState: string
   status: number
@@ -272,8 +272,7 @@ export const utils = {
 }
 
 /** Sends HTTP request. Runs in unsafe window! */
-function sendRequest(method: string, url: string, opts: UtilsRequestOptions = {}): Promise<UtilsResponse> {
-  valid.str(method) && valid.str(url) && valid.obj(opts)
+function sendRequest(method: string, url: string, opts: RequestOptions = {}): Promise<CustomResponse> {
   return new UnsafePromise((resolve, reject) => {
     GM.xmlhttpRequest({
       method: method.toUpperCase(),
@@ -286,14 +285,15 @@ function sendRequest(method: string, url: string, opts: UtilsRequestOptions = {}
       responseType: opts.responseType,
       timeout: opts.timeout,
       user: opts.user,
-      onabort: (resp) => reject(toUtilsResp(resp)),
-      onerror: (resp) => reject(toUtilsResp(resp)),
-      onload: (resp) => resolve(toUtilsResp(resp)),
+      onabort: (resp) => reject(toCustomResp(resp)),
+      onerror: (resp) => reject(toCustomResp(resp)),
+      onload: (resp) => resolve(toCustomResp(resp)),
     })
   })
 }
 
-function toUtilsResp(resp: GMResponse): UtilsResponse {
+/** Converts Greasemonkey response to custom response. */
+function toCustomResp(resp: GMResponse): CustomResponse {
   return {
     headers: resp.responseHeaders,
     readyState: resp.readyState,
