@@ -1,3 +1,12 @@
+/*!
+ * Greasemonkey.
+ * https://wiki.greasespot.net/Greasemonkey_Manual
+ */
+
+/**
+ * Greasemonkey info object.
+ * @see https://wiki.greasespot.net/GM.info
+ */
 export interface GMInfo {
   extId: string
   script: {
@@ -19,6 +28,10 @@ export interface GMInfo {
   version: string
 }
 
+/**
+ * Greasemonkey options for HTTP request.
+ * @see https://wiki.greasespot.net/GM.xmlHttpRequest#Arguments
+ */
 export interface GMRequestOptions {
   binary?: boolean
   context?: unknown,
@@ -44,6 +57,10 @@ export interface GMRequestOptions {
   user?: string
 }
 
+/**
+ * Greasemonkey response from HTTP request.
+ * @see https://wiki.greasespot.net/GM.xmlHttpRequest#Response_Object
+ */
 export interface GMResponse {
   context?: unknown
   /** onprogress */
@@ -59,28 +76,128 @@ export interface GMResponse {
   total?: number
 }
 
+/**
+ * Greasemonkey storable value.
+ * @see https://wiki.greasespot.net/GM.setValue#Arguments
+ */
 export type GMValue = string | number | boolean
+
+/**
+ * Greasemonkey HTTP request response handler.
+ * @see https://wiki.greasespot.net/GM.xmlHttpRequest#Arguments
+ */
 export type GMResponseHandler = (resp: GMResponse) => void
+
+/**
+ * Greasemonkey HTTP request response type.
+ * @see https://wiki.greasespot.net/GM.xmlHttpRequest#Arguments
+ */
 export type GMResponseType = XMLHttpRequestResponseType | 'ms-stream'
 
-declare const unsafeWindow: Window & typeof globalThis
-declare const GM_info: GMInfo
-declare function GM_deleteValue(key: string): Promise<void>
-declare function GM_getValue(key: string, def?: GMValue): Promise<GMValue | void>
-declare function GM_listValues(): Promise<string[]>
-declare function GM_openInTab(url: string, background?: boolean): void
-declare function GM_setClipboard(text: string): void
-declare function GM_setValue(key: string, value: GMValue): Promise<void>
-declare function GM_xmlhttpRequest(opts: GMRequestOptions): void
+/**
+ * Greasemonkey event handler.
+ * @see https://wiki.greasespot.net/GM.registerMenuCommand#Arguments
+ */
+export type GMEventHandler = () => void
 
-export const GM = {
-  unsafeWindow,
-  info: GM_info,
-  deleteValue: GM_deleteValue,
-  getValue: GM_getValue,
-  listValues: GM_listValues,
-  openInTab: GM_openInTab,
-  setClipboard: GM_setClipboard,
-  setValue: GM_setValue,
-  xmlhttpRequest: GM_xmlhttpRequest,
+/**
+ * Greasemonkey options for notification.
+ * @see https://wiki.greasespot.net/GM.notification#Arguments
+ */
+export interface GMNotificationOptions {
+  text: string
+  title?: string
+  image?: string
+  onclick?: GMEventHandler
+  ondone?: GMEventHandler
 }
+
+/**
+ * Greasemonkey API interface.
+ * @see https://wiki.greasespot.net/Greasemonkey_Manual:API
+ */
+export interface GMApi {
+  /**
+   * Unsafe client window object.
+   * @see https://wiki.greasespot.net/UnsafeWindow
+   */
+  unsafeWindow: Window & typeof globalThis
+  /**
+   * Info about Greasemonkey and running script.
+   * @see https://wiki.greasespot.net/GM.info
+   */
+  GM_info: GMInfo
+  /**
+   * Deletes value from persistent storage.
+   * @see https://wiki.greasespot.net/GM.deleteValue
+   */
+  GM_deleteValue(key: string): Promise<void>
+  /**
+   * Returns URL for script resource.
+   * @see https://wiki.greasespot.net/GM.getResourceUrl
+   */
+  GM_getResourceURL(resName: string): Promise<string>
+  /**
+   * Returns value from persistent storage.
+   * @see https://wiki.greasespot.net/GM.getValue
+   */
+  GM_getValue(key: string, def?: GMValue): Promise<GMValue | void>
+  /**
+   * Returns list of keys for stored values.
+   * @see https://wiki.greasespot.net/GM.listValues
+   */
+  GM_listValues(): Promise<string[]>
+  /**
+   * Shows notification dialog.
+   * @see https://wiki.greasespot.net/GM.notification
+   */
+  GM_notification(textOrOpts: string | GMNotificationOptions, title?: string, image?: string, onclick?: GMEventHandler): void
+  /**
+   * Opens new browser tab.
+   * @see https://wiki.greasespot.net/GM.openInTab
+   */
+  GM_openInTab(url: string, inBackground?: boolean): void
+  /**
+   * Adds item to "User Script Commands" section of Monkey Menu.
+   * @see https://wiki.greasespot.net/GM.registerMenuCommand
+   */
+  GM_registerMenuCommand(caption: string, cmdFunc: GMEventHandler, accessKey?: string): void
+  /**
+   * Sets clipboard text content.
+   * @see https://wiki.greasespot.net/GM.setClipboard
+   */
+  GM_setClipboard(text: string): void
+  /**
+   * Sets value in persistent storage.
+   * @see https://wiki.greasespot.net/GM.setValue
+   */
+  GM_setValue(key: string, value: GMValue): Promise<void>
+  /**
+   * Alternative to XMLHttpRequest without same-origin policy.
+   * @see https://wiki.greasespot.net/GM.xmlHttpRequest
+   */
+  GM_xmlhttpRequest(opts: GMRequestOptions): void
+}
+
+declare global {
+  interface Window extends GMApi {}
+}
+
+/**
+ * Greasemonkey API.
+ * @see https://wiki.greasespot.net/Greasemonkey_Manual:API
+ */
+export const GM = Object.freeze({
+  unsafeWindow: window.unsafeWindow,
+  info: window.GM_info,
+  deleteValue: window.GM_deleteValue,
+  getResourceURL: window.GM_getResourceURL,
+  getValue: window.GM_getValue,
+  listValues: window.GM_listValues,
+  notification: window.GM_notification,
+  openInTab: window.GM_openInTab,
+  registerMenuCommand: window.GM_registerMenuCommand,
+  setClipboard: window.GM_setClipboard,
+  setValue: window.GM_setValue,
+  xmlhttpRequest: window.GM_xmlhttpRequest,
+})
