@@ -4,6 +4,8 @@ const scripts = require('./scripts')
 
 /** @typedef {import('./types').UserScript} UserScript */
 
+const EOL = '\n'
+const SRC_SEP = EOL.repeat(2) + '/'.repeat(80) + EOL.repeat(2)
 const HEAD_JS_PATH = 'src/head.js'
 
 /** @type {() => void} */
@@ -27,7 +29,7 @@ async function buildScript(script) {
     buildSource(script.main),
     ...script.mods.map((modPath) => buildSource(modPath, true)),
   ])
-  const src = [metaSrc, headSrc, ...modsSrc, mainSrc].join('\n\n')
+  const src = [metaSrc, headSrc, ...modsSrc, mainSrc].join(SRC_SEP) + EOL
   await writeSource(script.target, src)
   console.log('Script:', script.target)
   return
@@ -47,7 +49,7 @@ async function buildSource(relPath, isMod = false) {
 /** @type {(relPath: string, src: string) => string} */
 function filterSource(relPath, src) {
   console.log('Source:', relPath)
-  return src.trim().replace(/^\s*\n$/gm, '')
+  return src.trim()
 }
 
 // Build!
