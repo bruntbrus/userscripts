@@ -1,30 +1,54 @@
-const { dirname, resolve } = require('path')
-const { readFile, writeFile } = require('fs/promises')
+const { basename } = require('path')
+const { getArg, modWrap, readSource, writeSource } = require('./utils')
+const scripts = require('./scripts')
 
-const ROOT_DIR = dirname(__dirname)
-const SRC_DIR = resolve(ROOT_DIR, 'src')
-const BUILD_DIR = resolve(ROOT_DIR, 'build')
-const DIST_DIR = resolve(ROOT_DIR, 'dist')
+/** @typedef {import('./types').UserScript} UserScript */
 
-const fileOptions = { encoding: 'utf8' }
+const HEAD_JS_PATH = 'src/head.js'
 
-main()
-
+/** @type {() => void} */
 function main() {
-  run()
+  const scriptName = getArg('-s')
+  if (!scriptName) return console.warn('Missing script name.')
+  const script = scripts.find((script) => script.name === scriptName)
+  if (script) {
+    buildScript(script)
+  } else {
+    console.warn(`Script "${scriptName}" not found.`)
+  }
 }
 
-async function run() {
-  const [headerJs, gmJs, utilsJs, footerJs] = await Promise.all([
-    readFile(resolve(SRC_DIR, 'header.js'), fileOptions),
-    readFile(resolve(BUILD_DIR, 'gm.js'), fileOptions),
-    readFile(resolve(BUILD_DIR, 'utils.js'), fileOptions),
-    readFile(resolve(SRC_DIR, 'footer.js'), fileOptions),
+/** @type {(script: UserScript) => Promise<void>} */
+async function buildScript(script) {
+  console.log('Build:', script.name)
+  const [headSrc, metaSrc, mainSrc, ...modsSrc] = await Promise.all([
+    buildSource(HEAD_JS_PATH),
+    buildSource(script.meta),
+    buildSource(script.main),
+    ...script.mods.map((modPath) => buildSource(modPath, true)),
   ])
-  const js = `${headerJs.trim()}\n\n${modWrap('./gm', gmJs.trim())}\n\n${modWrap('./utils', utilsJs.trim())}\n\n${footerJs}`
-  await writeFile(resolve(DIST_DIR, 'utils.user.js'), js, fileOptions)
+  const src = [metaSrc, headSrc, ...modsSrc, mainSrc].join('\n\n')
+  await writeSource(script.target, src)
+  console.log('Script:', script.target)
+  return
 }
 
-function modWrap(modName, js) {
-  return `register("${modName}", (exports, module) => {\n${js}\n});`
+/** @type {(relPath: string, isMod?: boolean)} */
+async function buildSource(relPath, isMod = false) {
+  let src = await readSource(relPath)
+  src = filterSource(relPath, src)
+  if (isMod) {
+    const modName = basename(relPath, '.js')
+    src = modWrap(modName, './' + modName, src)
+  }
+  return src
 }
+
+/** @type {(relPath: string, src: string) => string} */
+function filterSource(relPath, src) {
+  console.log('Source:', relPath)
+  return src.trim().replace(/^\s*\n$/gm, '')
+}
+
+// Build!
+main()
