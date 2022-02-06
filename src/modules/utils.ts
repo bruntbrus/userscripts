@@ -38,28 +38,30 @@ let globalKeys: string[] | null = null
 const valid = {
   bool(value: unknown): boolean {
     if (typeof value !== 'boolean') throw UnsafeError(`Boolean expected.`)
-    return true
+    return value
   },
-  func(value: unknown): boolean {
+  func(value: unknown): Function {
     if (typeof value !== 'function') throw UnsafeError(`Function expected.`)
-    return true
+    return value
   },
-  num(value: unknown): boolean {
-    if (!Number.isFinite(value)) throw UnsafeError(`Finite number expected.`)
-    return true
+  num(value: unknown): number {
+    if (!Number.isFinite(value)) throw UnsafeError(`Number expected.`)
+    // @ts-ignore
+    return value
   },
-  obj(value: unknown): boolean {
+  obj(value: unknown): object {
     if (!value || typeof value !== 'object') throw UnsafeError(`Object expected.`)
-    return true
+    return value
   },
-  str(value: unknown): boolean {
+  str(value: unknown): string {
     if (typeof value !== 'string') throw UnsafeError(`String expected.`)
-    return true
+    return value
   },
 }
 
 /** Utility methods. Run in unsafe window! */
-export const utils = {
+export const utils = Object.freeze({
+  _gm: GM,
   array<T>(...values: T[]): T[] {
     return values
   },
@@ -68,41 +70,39 @@ export const utils = {
     GM.setClipboard(text)
   },
   delVal(key: string): Promise<void> {
-    valid.str(key)
-    return GM.deleteValue(key)
+    return GM.deleteValue(valid.str(key))
   },
   delay(duration: number): Promise<void> {
     valid.num(duration)
     return new UnsafePromise((res) => setTimeout(res, duration))
   },
   each<T>(array: ArrayLike<T>, fn: (value: T, i: number) => void): void {
-    valid.obj(array) && valid.func(fn)
-    UnsafeArray.prototype.forEach.call(array, fn)
+    valid.func(fn)
+    UnsafeArray.prototype.forEach.call(valid.obj(array), fn)
   },
   eachKey<T>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => void): void {
-    valid.obj(obj) && valid.func(fn)
-    UnsafeObject.keys(obj).forEach((key, i) => fn(key, obj[key], i))
+    valid.func(fn)
+    UnsafeObject.keys(valid.obj(obj)).forEach((key, i) => fn(key, obj[key], i))
   },
   filter<T>(array: ArrayLike<T>, fn: (value: T, i: number) => boolean): T[] {
-    valid.obj(array) && valid.func(fn)
-    return UnsafeArray.prototype.filter.call(array, fn)
+    valid.func(fn)
+    return UnsafeArray.prototype.filter.call(valid.obj(array), fn)
   },
   filterKey<T>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => boolean): T[] {
-    valid.obj(obj) && valid.func(fn)
-    return UnsafeObject.keys(obj).filter((key, i) => fn(key, obj[key], i)).map((key) => obj[key])
+    valid.func(fn)
+    return UnsafeObject.keys(valid.obj(obj)).filter((key, i) => fn(key, obj[key], i)).map((key) => obj[key])
   },
   find<T>(array: ArrayLike<T>, fn: (value: T, i: number) => boolean): T | null {
-    valid.obj(array) && valid.func(fn)
-    return UnsafeArray.prototype.find.call(array, fn)
+    valid.func(fn)
+    return UnsafeArray.prototype.find.call(valid.obj(array), fn)
   },
   findKey<T>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => boolean): T | null {
-    valid.obj(obj) && valid.func(fn)
-    const key = UnsafeObject.keys(obj).find((key, i) => fn(key, obj[key], i))
+    valid.func(fn)
+    const key = UnsafeObject.keys(valid.obj(obj)).find((key, i) => fn(key, obj[key], i))
     return key ? obj[key] : null
   },
   getVal(key: string, def?: GMValue): Promise<GMValue | void> {
-    valid.str(key)
-    return GM.getValue(key, def)
+    return GM.getValue(valid.str(key), def)
   },
   globals(exclude = false): Record<string, unknown> {
     valid.bool(exclude)
@@ -125,12 +125,11 @@ export const utils = {
     return UnsafeObject.freeze({ ...GM.info })
   },
   hasProp(obj: Record<string, unknown>, prop: string): boolean {
-    valid.obj(obj) && valid.str(prop)
-    return UnsafeObject.prototype.hasOwnProperty.call(obj, prop)
+    return UnsafeObject.prototype.hasOwnProperty.call(valid.obj(obj), valid.str(prop))
   },
   index<T>(array: ArrayLike<T>, fn: (value: T, i: number) => boolean): number {
-    valid.obj(array) && valid.func(fn)
-    return UnsafeArray.prototype.findIndex.call(array, fn)
+    valid.func(fn)
+    return UnsafeArray.prototype.findIndex.call(valid.obj(array), fn)
   },
   isArray<T>(value: unknown): value is T[] {
     return UnsafeArray.isArray(value)
@@ -166,37 +165,35 @@ export const utils = {
     return GM.listValues()
   },
   map<T, R>(array: ArrayLike<T>, fn: (value: T, i: number) => R): R[] {
-    valid.obj(array) && valid.func(fn)
+    valid.func(fn)
     // @ts-ignore
-    return UnsafeArray.prototype.map.call(array, fn)
+    return UnsafeArray.prototype.map.call(valid.obj(array), fn)
   },
   mapKey<T, R>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => R): R[] {
-    valid.obj(obj) && valid.func(fn)
-    return UnsafeObject.keys(obj).map((key, i) => fn(key, obj[key], i))
+    valid.func(fn)
+    return UnsafeObject.keys(valid.obj(obj)).map((key, i) => fn(key, obj[key], i))
   },
   noop(): void { },
   open(url: string): void {
-    valid.str(url)
-    GM.openInTab(url, false)
+    GM.openInTab(valid.str(url), false)
   },
   query<E extends HTMLElement>(sel: string, root: ParentNode = document): E | null {
-    valid.str(sel) && valid.obj(root)
-    return root.querySelector(sel)
+    valid.obj(root)
+    return root.querySelector(valid.str(sel))
   },
   queryAll<E extends HTMLElement>(sel: string, root: ParentNode = document): E[] {
-    valid.str(sel) && valid.obj(root)
-    return Array.from(root.querySelectorAll(sel))
+    valid.obj(root)
+    return Array.from(root.querySelectorAll(valid.str(sel)))
   },
   randInt(max: number): number {
-    valid.num(max)
-    return UnsafeMath.floor(max * Math.random())
+    return UnsafeMath.floor(valid.num(max) * Math.random())
   },
   request: {
     send: sendRequest,
-    get(url: string): Promise<UtilsResponse> {
+    get(url: string): Promise<CustomResponse> {
       return sendRequest('GET', url)
     },
-    post(url: string, data: string): Promise<UtilsResponse> {
+    post(url: string, data: string): Promise<CustomResponse> {
       return sendRequest('POST', url, { data })
     },
   },
@@ -216,8 +213,7 @@ export const utils = {
     })
   },
   setVal(key: string, value: unknown): Promise<void> {
-    valid.str(key)
-    return GM.setValue(key, utils.str(value))
+    return GM.setValue(valid.str(key), utils.str(value))
   },
   sheet(href: string): Promise<HTMLLinkElement> {
     valid.str(href)
@@ -269,10 +265,13 @@ export const utils = {
   type(value: unknown): string {
     return UnsafeObject.prototype.toString.call(value).slice(8, -1)
   },
-}
+})
 
 /** Sends HTTP request. Runs in unsafe window! */
 function sendRequest(method: string, url: string, opts: RequestOptions = {}): Promise<CustomResponse> {
+  valid.str(method)
+  valid.str(url)
+  valid.obj(opts)
   return new UnsafePromise((resolve, reject) => {
     GM.xmlhttpRequest({
       method: method.toUpperCase(),
