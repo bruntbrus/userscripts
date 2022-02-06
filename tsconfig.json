@@ -9,7 +9,7 @@
     "strict": true,
     "target": "ES2020"
   },
-  "include": ["src/*.ts"],
+  "include": ["src/modules/*.ts"],
   "typeAcquisition": {
     "enable": false
   }
