@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "None",
+    "moduleResolution": "node",
     "newLine": "lf",
     "outDir": "build",
     "removeComments": true,
@@ -9,7 +10,7 @@
     "strict": true,
     "target": "ES2020"
   },
-  "include": ["src/modules/*.ts"],
+  "include": ["src/modules/**/*.ts"],
   "typeAcquisition": {
     "enable": false
   }
