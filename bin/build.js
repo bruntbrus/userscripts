@@ -40,8 +40,10 @@ async function buildSource(relPath, isMod = false) {
   let src = await readSource(relPath)
   src = filterSource(relPath, src)
   if (isMod) {
-    const modName = basename(relPath, '.js')
-    src = modWrap(modName, './' + modName, src)
+    const matches = relPath.match(/\/(\w+)(\/index\.js)?$/, '')
+    if (!matches) throw Error('Invalid module path.')
+    const [_, modName] = matches
+    src = modWrap(modName, modName, src)
   }
   return src
 }
@@ -49,7 +51,7 @@ async function buildSource(relPath, isMod = false) {
 /** @type {(relPath: string, src: string) => string} */
 function filterSource(relPath, src) {
   console.log('Source:', relPath)
-  return src.trim()
+  return src.trim().replace(/\brequire\("\W*(\w+)"\)/g, 'require("$1")')
 }
 
 // Build!
