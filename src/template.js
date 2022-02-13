@@ -1,3 +1,5 @@
+/* <meta> */
+
 function require(modName) {
     const { modMap } = register;
     if (!modMap.has(modName)) throw Error(`Module "${modName}" is not registered.`);
@@ -19,3 +21,11 @@ function register(modName, modFn) {
 }
 
 register.modMap = new Map();
+
+/* <modules> */
+
+;(function main() { "use strict";
+
+/* <main> */
+
+})();

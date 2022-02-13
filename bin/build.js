@@ -1,12 +1,9 @@
-const { basename } = require('path')
 const { getArg, modWrap, readSource, writeSource } = require('./utils')
 const scripts = require('./scripts')
 
 /** @typedef {import('./types').UserScript} UserScript */
 
-const EOL = '\n'
-const SRC_SEP = EOL.repeat(2) + '/'.repeat(80) + EOL.repeat(2)
-const HEAD_JS_PATH = 'src/head.js'
+const TEMPLATE_JS_PATH = 'src/template.js'
 
 /** @type {() => void} */
 function main() {
@@ -23,13 +20,20 @@ function main() {
 /** @type {(script: UserScript) => Promise<void>} */
 async function buildScript(script) {
   console.log('Build:', script.name)
-  const [headSrc, metaSrc, mainSrc, ...modsSrc] = await Promise.all([
-    buildSource(HEAD_JS_PATH),
+  const [templateSrc, metaSrc, mainSrc, ...modsSrc] = await Promise.all([
+    buildSource(TEMPLATE_JS_PATH),
     buildSource(script.meta),
     buildSource(script.main),
     ...script.mods.map((modPath) => buildSource(modPath, true)),
   ])
-  const src = [metaSrc, headSrc, ...modsSrc, mainSrc].join(SRC_SEP) + EOL
+  const src = templateSrc.replace(/\/\*\s*<([a-z]+)>\s*\*\//g, (match, name) => {
+    switch (name) {
+      case 'meta': return metaSrc
+      case 'modules': return modsSrc.join('\n\n')
+      case 'main': return mainSrc
+    }
+    return match
+  })
   await writeSource(script.target, src)
   console.log('Script:', script.target)
   return
