@@ -7,6 +7,6 @@ module.exports = [
     target: 'dist/utils.user.js',
     meta: 'src/utils.meta.js',
     main: 'src/utils.main.js',
-    mods: ['build/gm.js', 'build/utils.js'],
+    mods: ['build/gm/index.js', 'build/utils/index.js'],
   },
 ]
