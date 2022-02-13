@@ -238,7 +238,7 @@ export const utils = Object.freeze({
       document.head.appendChild(el)
     })
   },
-  textbox(text?: string | boolean): string | void {
+  textbox(content?: unknown): string | void {
     const id = '_utils_textbox'
     // @ts-ignore
     let textEl: HTMLTextAreaElement = document.getElementById(id)
@@ -261,12 +261,16 @@ export const utils = Object.freeze({
       ].join('; '))
       document.documentElement.appendChild(textEl)
     }
-    if (typeof text === 'boolean') {
-      textEl.style.display = text ? 'block' : 'none'
+    if (typeof content === 'boolean') {
+      textEl.style.display = content ? 'block' : 'none'
       return
     }
-    if (typeof text === 'string') {
-      textEl.value = text
+    if (content !== undefined) {
+      try {
+        textEl.value = utils.str(content)
+      } catch (_err) {
+        textEl.value = String(content)
+      }
       return
     }
     return textEl.value
