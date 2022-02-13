@@ -1,6 +1,6 @@
 /*!
  * Greasemonkey types.
- *!
+ */
 
 /**
  * Greasemonkey info object.
