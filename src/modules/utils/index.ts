@@ -238,6 +238,39 @@ export const utils = Object.freeze({
       document.head.appendChild(el)
     })
   },
+  textbox(text?: string | boolean): string | void {
+    const id = '_utils_textbox'
+    // @ts-ignore
+    let textEl: HTMLTextAreaElement = document.getElementById(id)
+    if (!textEl) {
+      textEl = document.createElement('textarea')
+      textEl.id = id
+      textEl.cols = 40
+      textEl.rows = 10
+      textEl.setAttribute('style', [
+        'box-sizing: border-box',
+        'position: fixed',
+        'bottom: 0',
+        'right: 0',
+        'border: 2px solid yellow',
+        'resize: auto',
+        'font-family: monospace',
+        'font-size: 14px',
+        'opacity: 0.9',
+        'z-index: 9999',
+      ].join('; '))
+      document.documentElement.appendChild(textEl)
+    }
+    if (typeof text === 'boolean') {
+      textEl.style.display = text ? 'block' : 'none'
+      return
+    }
+    if (typeof text === 'string') {
+      textEl.value = text
+      return
+    }
+    return textEl.value
+  },
   type(value: unknown): string {
     return UnsafeObject.prototype.toString.call(value).slice(8, -1)
   },
