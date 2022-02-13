@@ -1,24 +1,6 @@
-import { GM } from './gm'
-import type { GMInfo, GMResponse, GMResponseType, GMValue } from './gm'
-
-export interface RequestOptions {
-  binary?: boolean
-  data?: string
-  headers?: Record<string, string>
-  overrideMimeType?: string
-  password?: string
-  responseType?: GMResponseType
-  timeout?: number
-  user?: string
-}
-
-export interface CustomResponse {
-  headers: string
-  readyState: string
-  status: number
-  statusText: string
-  text: string
-}
+import { GM } from '../gm'
+import type { GMInfo, GMResponse, GMValue } from '../gm/types'
+import type { CustomResponse, RequestOptions } from './types'
 
 const { unsafeWindow } = GM
 
