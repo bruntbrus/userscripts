@@ -1,7 +1,8 @@
+/** @typedef {import('./types').UserScript} UserScript */
+
+const { createMetadataBlock } = require('./gm')
 const { getArg, modWrap, readSource, writeSource } = require('./utils')
 const scripts = require('./scripts')
-
-/** @typedef {import('./types').UserScript} UserScript */
 
 const TEMPLATE_JS_PATH = 'src/template.js'
 
@@ -20,15 +21,14 @@ function main() {
 /** @type {(script: UserScript) => Promise<void>} */
 async function buildScript(script) {
   console.log('Build:', script.name)
-  const [templateSrc, metaSrc, mainSrc, ...modsSrc] = await Promise.all([
+  const [templateSrc, mainSrc, ...modsSrc] = await Promise.all([
     buildSource(TEMPLATE_JS_PATH),
-    buildSource(script.meta),
     buildSource(script.main),
     ...script.mods.map((modPath) => buildSource(modPath, true)),
   ])
   const src = templateSrc.replace(/\/\*\s*<([a-z]+)>\s*\*\//g, (match, name) => {
     switch (name) {
-      case 'meta': return metaSrc
+      case 'meta': return createMetadataBlock(script.meta)
       case 'modules': return modsSrc.join('\n\n')
       case 'main': return mainSrc
     }
