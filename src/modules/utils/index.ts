@@ -1,5 +1,5 @@
 import { GM } from '../gm'
-import type { GMInfo, GMResponse, GMValue } from '../gm/types'
+import type { GMEventHandler, GMInfo, GMResponse, GMValue } from '../gm/types'
 import type { CustomResponse, RequestOptions } from './types'
 
 const { unsafeWindow } = GM
@@ -22,8 +22,9 @@ const valid = {
     if (typeof value !== 'boolean') throw UnsafeError(`Boolean expected.`)
     return value
   },
-  func(value: unknown): Function {
+  func<F>(value: unknown): F {
     if (typeof value !== 'function') throw UnsafeError(`Function expected.`)
+    // @ts-ignore
     return value
   },
   num(value: unknown): number {
@@ -31,8 +32,9 @@ const valid = {
     // @ts-ignore
     return value
   },
-  obj(value: unknown): object {
+  obj<T>(value: unknown): T {
     if (!value || typeof value !== 'object') throw UnsafeError(`Object expected.`)
+    // @ts-ignore
     return value
   },
   str(value: unknown): string {
@@ -55,28 +57,24 @@ export const utils = Object.freeze({
     return GM.deleteValue(valid.str(key))
   },
   delay(duration: number): Promise<void> {
-    valid.num(duration)
-    return new UnsafePromise((res) => setTimeout(res, duration))
+    return new UnsafePromise((res) => setTimeout(res, valid.num(duration)))
   },
   each<T>(array: ArrayLike<T>, fn: (value: T, i: number) => void): void {
-    valid.func(fn)
-    UnsafeArray.prototype.forEach.call(valid.obj(array), fn)
+    UnsafeArray.prototype.forEach.call(valid.obj(array), valid.func(fn))
   },
   eachKey<T>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => void): void {
     valid.func(fn)
     UnsafeObject.keys(valid.obj(obj)).forEach((key, i) => fn(key, obj[key], i))
   },
   filter<T>(array: ArrayLike<T>, fn: (value: T, i: number) => boolean): T[] {
-    valid.func(fn)
-    return UnsafeArray.prototype.filter.call(valid.obj(array), fn)
+    return UnsafeArray.prototype.filter.call(valid.obj(array), valid.func(fn))
   },
   filterKey<T>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => boolean): T[] {
     valid.func(fn)
     return UnsafeObject.keys(valid.obj(obj)).filter((key, i) => fn(key, obj[key], i)).map((key) => obj[key])
   },
   find<T>(array: ArrayLike<T>, fn: (value: T, i: number) => boolean): T | null {
-    valid.func(fn)
-    return UnsafeArray.prototype.find.call(valid.obj(array), fn)
+    return UnsafeArray.prototype.find.call(valid.obj(array), valid.func(fn))
   },
   findKey<T>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => boolean): T | null {
     valid.func(fn)
@@ -110,8 +108,7 @@ export const utils = Object.freeze({
     return UnsafeObject.prototype.hasOwnProperty.call(valid.obj(obj), valid.str(prop))
   },
   index<T>(array: ArrayLike<T>, fn: (value: T, i: number) => boolean): number {
-    valid.func(fn)
-    return UnsafeArray.prototype.findIndex.call(valid.obj(array), fn)
+    return UnsafeArray.prototype.findIndex.call(valid.obj(array), valid.func(fn))
   },
   isArray<T>(value: unknown): value is T[] {
     return UnsafeArray.isArray(value)
@@ -147,9 +144,8 @@ export const utils = Object.freeze({
     return GM.listValues()
   },
   map<T, R>(array: ArrayLike<T>, fn: (value: T, i: number) => R): R[] {
-    valid.func(fn)
     // @ts-ignore
-    return UnsafeArray.prototype.map.call(valid.obj(array), fn)
+    return UnsafeArray.prototype.map.call(valid.obj(array), valid.func(fn))
   },
   mapKey<T, R>(obj: Record<string, T>, fn: (key: string, value: T, i: number) => R): R[] {
     valid.func(fn)
@@ -160,12 +156,10 @@ export const utils = Object.freeze({
     GM.openInTab(valid.str(url), false)
   },
   query<E extends HTMLElement>(sel: string, root: ParentNode = document): E | null {
-    valid.obj(root)
-    return root.querySelector(valid.str(sel))
+    return valid.obj<ParentNode>(root).querySelector(valid.str(sel))
   },
   queryAll<E extends HTMLElement>(sel: string, root: ParentNode = document): E[] {
-    valid.obj(root)
-    return Array.from(root.querySelectorAll(valid.str(sel)))
+    return Array.from(valid.obj<ParentNode>(root).querySelectorAll(valid.str(sel)))
   },
   randInt(max: number): number {
     return UnsafeMath.floor(valid.num(max) * Math.random())
@@ -251,13 +245,11 @@ export const utils = Object.freeze({
 
 /** Sends HTTP request. Runs in unsafe window! */
 function sendRequest(method: string, url: string, opts: RequestOptions = {}): Promise<CustomResponse> {
-  valid.str(method)
-  valid.str(url)
   valid.obj(opts)
   return new UnsafePromise((resolve, reject) => {
     GM.xmlhttpRequest({
-      method: method.toUpperCase(),
-      url,
+      method: valid.str(method).toUpperCase(),
+      url: valid.str(url),
       binary: opts.binary,
       data: opts.data,
       headers: opts.headers,
