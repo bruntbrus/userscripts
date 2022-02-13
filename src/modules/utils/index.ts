@@ -249,6 +249,7 @@ export const utils = Object.freeze({
       textEl.rows = 10
       textEl.setAttribute('style', [
         'box-sizing: border-box',
+        'display: block',
         'position: fixed',
         'bottom: 0',
         'right: 0',
