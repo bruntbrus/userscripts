@@ -49,6 +49,9 @@ export const utils = Object.freeze({
   array<T>(...values: T[]): T[] {
     return values
   },
+  command(caption: string, accessKey: string, cmdFunc: GMEventHandler): void {
+    GM.registerMenuCommand(valid.str(caption), valid.func(cmdFunc), valid.str(accessKey))
+  },
   copy<T>(...values: T[]): void {
     const text = values.map((value) => utils.str(value)).join('\n')
     GM.setClipboard(text)
